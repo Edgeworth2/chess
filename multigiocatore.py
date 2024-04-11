@@ -11,37 +11,37 @@ def multigiocatore():
             ["BR", "BN", "BB", "BQ", "BK", "BB", "BN", "BR"]]
     turn(True)
 
-def attack(y, x, me, op):
-    global board, controlled
-    controlled = []
-    for i in board:
-        if i[0] == op:
-            if i[1] == "P":
-                pawn(y, x, controlled, me, op, True)
-            elif i[1] == "R":
-                rook(y, x, controlled, me, op, True)
-            elif i[1] == "B":
-                bishop(y, x, controlled, me, op, True)
-            elif i[1] == "K":
-                knight(y, x, controlled, me, op, True)
-            elif i[1] == "Q":
-                rook(y, x, controlled, me, op, True)
-                bishop(y, x, controlled, me, op, True)
-    print(controlled)
+def attack(y, x, op, me):
+    global board
+    enemy_moves = []
+    for i in range(8):
+        for j in range(8):
+            if board[i][j][0] == op:
+                match(board[i][j][1]):
+                    case "P":
+                        enemy_moves.append(pawn(i, j, enemy_moves, me, True))
+                    case "R":
+                        enemy_moves.append(rook(i, j, enemy_moves, op, me, True))
+                    case "N":
+                        enemy_moves.append(knight(i, j, enemy_moves, me, True))
+                    case "B":
+                        enemy_moves.append(bishop(i, j, enemy_moves, op, me, True))
+                    case "Q":
+                        enemy_moves.append(rook(i, j, enemy_moves, op, me, True))
+                        enemy_moves.append(bishop(i, j, enemy_moves, op, me, True))
+    for k in enemy_moves:
+        for j in enemy_moves:
+            if k==j:
+                enemy_moves.remove(j)
+    print(enemy_moves)  
+    if [y, x] in enemy_moves:
+        return True
+    else:
+        return False
 
-def controller_fill(moves):
-    global controlled
-    if len(controlled) == 0:
-            controlled.append(moves[0])
-    for i in controlled:
-        for j in range(len(moves)):
-            if i==moves[j]:
-                break
-            else:
-                controlled.append(moves[j])
-    
 def turn(w):
     global board
+    print(attack(7, 5, "B", "W"))
     alpha = "ABCDEFGH"
     nums = "12345678"
     if w == True:
@@ -59,6 +59,8 @@ def turn(w):
                 print(f"{board[i][j]}|", end="")
             print(f"{i+1}\n--|--|--|--|--|--|--|--|-")
     start = input(f"{player}, Scegli Le coordinate della pedina che vuoi muovere. ")
+    start = start.capitalize()
+    print(start)
     if len(start) == 2 and start[0] in alpha and start[1] in nums:
         for i in range(8):
             if alpha[i] == start[0]:
@@ -78,7 +80,8 @@ def turn(w):
             else:
                 turn(False)
     else:
-        print("La casella selezionata non e' valida.")
+        print("La casella selezionata non e' valida, riprova.")
+        turn(w)
 
 def white(y, x, p):
     me = "W"
@@ -136,19 +139,23 @@ def moving(y, x, moves, p, w):
     print([y1, x1])
     if([y1, x1] not in moves):
             print("Questa mossa non e' valida, riprova.")
-            white(y, x, p)
+            if w:
+                white(y, x, p)
+            else:
+                black(y, x, p)
     elif w == True:
         board[y][x] = "  "
-        if p == "P":
-            board[y1][x1] = "WP"
-        elif p == "N":
-            board[y1][x1] = "WN"
-        elif p == "B":
-            board[y1][x1] = "WB"
-        elif p == "R":
-            board[y1][x1] = "WR"
-        elif p == "Q":
-            board[y1][x1] = "WQ"
+        match(p):
+            case "P":
+                board[y1][x1] = "WP"
+            case "N":
+                board[y1][x1] = "WN"
+            case "B":
+                board[y1][x1] = "WB"
+            case "R":
+                board[y1][x1] = "WR"
+            case "Q":
+                board[y1][x1] = "WQ"
         print("mossa eseguita.")
         print(f"A |B |C |D |E |F |G |H |\n--|--|--|--|--|--|--|--|-")
         for i in range(7, -1, -1):
@@ -157,16 +164,17 @@ def moving(y, x, moves, p, w):
             print(f"{i+1}\n--|--|--|--|--|--|--|--|-")
     elif w == False:
         board[y][x] = "  "
-        if p == "P":
-            board[y1][x1] = "BP"
-        elif p == "N":
-            board[y1][x1] = "BN"
-        elif p == "B":
-            board[y1][x1] = "BB"
-        elif p == "R":
-            board[y1][x1] = "BR"
-        elif p == "Q":
-            board[y1][x1] = "BQ"
+        match(p):
+            case "P":
+                board[y1][x1] = "BP"
+            case "N":
+                board[y1][x1] = "BN"
+            case "B":
+                board[y1][x1] = "BB"
+            case "R":
+                board[y1][x1] = "BR"
+            case "Q":
+                board[y1][x1] = "BQ"
         print("mossa eseguita.")
         print(f"A |B |C |D |E |F |G |H |\n--|--|--|--|--|--|--|--|-")
         for i in range(8): 
@@ -175,46 +183,39 @@ def moving(y, x, moves, p, w):
             print(f"{i+1}\n--|--|--|--|--|--|--|--|-")
 
 def king(y, x, moves, me, op, control):
-    if (board[y+1][x+1] == "  " or board[y+1][x+1][0] == f"{op}") and attack(x, y, me, op) == False:
-        pass
-
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if(j==0 and i==0):
+                continue
+            elif board[y][x][0] != f"{me}" and (attack(y+i, x+j, op, me) == False):
+                moves.append([y+i, x+j])
+        print(moves)
 
 def pawn(y, x, moves, op, control):
-    global controlled
-    if op == "B":
-        if y == 7:
-            print("Promozione.")
-        if board[y+1][x] == "  ":
-            moves.append([y+1,x])
-        if y == 1 and board[y+1][x] == "  " and board[y+2][x] == "  ":
-            moves.append([y+2,x])
-        if x != 7 and y != 7:
-            if board[y+1][x+1][0] == f"{op}":
-                moves.append([y+1,x+1])
-        if y != 7 and x != 0:    
-            if board[y+1][x-1][0] == f"{op}":
-                moves.append([y+1,x-1])
-    elif op == "W":
-        if y == 0:
-            print("Promozione.")
-        if board[y-1][x] == "  ":
-            moves.append([y-1,x])
-        if y == 6 and board[y-1][x] == "  " and board[y-2][x] == "  ":
-            moves.append([y-2,x])
-        if x != 0 and y != 0:
-            if board[y-1][x-1][0] == f"{op}":
-                moves.append([y-1,x-1])
-        if y != 0 and x != 7:    
-            if board[y-1][x+1][0] == f"{op}":
-                moves.append([y-1,x+1])
-    if control == False:
-        return
-    else:
-        controller_fill(moves)
+    if op == "W":
+        a = 7
+        b = -1
+    elif op == "B":
+        a = 0
+        b = 1
+    if y == a:
+        print("Promozione.")
+    if not control:
+        if board[y+(1*b)][x] == "  ":
+            moves.append([y+(1*b),x])
+        if y == (a + (1*b)) and board[y+(1*b)][x] == "  " and board[y+(2*b)][x] == "  ":
+            moves.append([y+(2*b),x])
+    if x != a+(1*b) and y != a+(1*b):
+        if board[y+(1*b)][x+(1*b)][0] == f"{op}":
+            moves.append([y+(1*b),x+(1*b)])
+    if y != a+(1*b) and x != a:
+        if board[y+(1*b)][x-(1*b)][0] == f"{op}":
+            moves.append([y+(1*b),x-(1*b)])
+    if control:
+        return moves
         
 
 def knight(y, x, moves, op, control):
-    global controlled
     if y < 5 and x < 6:
         if board[y+2][x+1] == "  " or board[y+2][x+1][0] == f"{op}":
             moves.append([y+2,x+1])
@@ -223,29 +224,26 @@ def knight(y, x, moves, op, control):
             moves.append([y+2,x-1])
     if y < 6 and x < 5:
         if board[y+1][x+2] == "  " or board[y+1][x+2][0] == f"{op}":
-            moves.append([y+2,x+1])
+            moves.append([y+1,x+2])
     if y < 6 and x > 2:
         if board[y+1][x-2] == "  " or board[y+1][x-2][0] == f"{op}":
-            moves.append([y+2,x+1])
+            moves.append([y+1,x-2])
     if y > 0 and x < 5:
         if board[y-1][x+2] == "  " or board[y-1][x+2][0] == f"{op}":
-            moves.append([y+2,x+1])
+            moves.append([y-1,x+2])
     if y > 0 and x > 1:
         if board[y-1][x-2] == "  " or board[y-1][x-2][0] == f"{op}":
-            moves.append([y+2,x+1])
+            moves.append([y-1,x-2])
     if y > 1 and x < 6:
         if board[y-2][x+1] == "  " or board[y-2][x+1][0] == f"{op}":
-            moves.append([y+2,x+1])
+            moves.append([y-2,x+1])
     if y > 1 and x > 0:
         if board[y-2][x-1] == "  " or board[y-2][x-1][0] == f"{op}":
-            moves.append([y+2,x+1])
-    if control == False:
-        return
-    else:
-        controller_fill(moves)
+            moves.append([y-2,x-1])
+    if control:
+        return moves
 
 def rook(y, x, moves, me, op, control):
-    global controlled
     for i in range(1, 8):
             if y+i < 8:
                 if board[y+i][x][0] == f"{me}":
@@ -282,13 +280,10 @@ def rook(y, x, moves, me, op, control):
                 break
             elif board[y][x-i] == "  ":
                 moves.append([y, x-i])
-    if control == False:
-        return
-    else:
-        controller_fill(moves)
+    if control:
+        return moves
 
 def bishop(y, x, moves, me, op, control):
-    global controlled
     for i in range(1, 8):
             if y+i < 8 and x+i < 8:
                 if board[y+i][x+i][0] == f"{me}":
@@ -325,9 +320,7 @@ def bishop(y, x, moves, me, op, control):
                 break
             elif board[y-i][x-i] == "  ":
                 moves.append([y-i, x-i])
-    if control == False:
-        return
-    else:
-        controller_fill(moves)
-
+    if control:
+        return moves
+    
 multigiocatore()
