@@ -16,8 +16,8 @@ def multigiocatore():
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-            ["BP", "BP", "BP", "BP", "BP", "BP", "BP", "BP"],
-            ["BR", "BN", "BB", "BQ", "BK", "BB", "BN", "BR"]]
+            ["BP", "BP", "BP", "BP", "BP", "BP", "BP", "  "],
+            ["BR", "BN", "BB", "BQ", "BK", "BB", "BN", "  "]]
     choise = "!"
     if board1 != board or board1 == "":
         while choise != "y" and choise != "n" and choise != "Y" and choise != "N":
@@ -368,15 +368,28 @@ def king(y, x, moves, me, op, control, board):
 
 def pawn(y, x, moves, op, control, board):
     if op == "W":
+        me = "B"
         a = 7
         b = -1
         c = 0
     elif op == "B":
+        me = "W"
         a = 0
         b = 1
         c = 7
     if y == c:
-        print("Promozione.")
+        printboard(me, board)
+        scelta = int(input("1.Regina\n2.Torre\n3.Alfiere\n4.Cavallo\n"))
+        match(scelta):
+            case 1:
+                board[x][y] = f"{me}Q"
+            case 2:
+                board[x][y] = f"{me}R"
+            case 3:
+                board[x][y] = f"{me}B"
+            case 4:
+                board[x][y] = f"{me}N"
+
     if not control:
         if board[y+(1*b)][x] == "  ":
             moves.append([y+(1*b),x])
