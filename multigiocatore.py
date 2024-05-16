@@ -287,7 +287,7 @@ def black(y, x, p):
                
 def moving(y, x, moves, p, w):
     global illegal_moves
-    dowhile = False
+    dowhile = True
     while dowhile == True:
         move = input("Inserisci le coordinate della destinazione. ")
         move = move.capitalize()
