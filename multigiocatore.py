@@ -5,7 +5,7 @@ from save import *
 
 illegal_moves = []
 global check
-check = [False, "", [], []]
+check = [False, ""]
 
 def multigiocatore():
     global board
@@ -16,7 +16,7 @@ def multigiocatore():
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-            ["BP", "BP", "BP", "BP", "BP", "BP", "BP", "  "],
+            ["BP", "BP", "BP", "BP", "BP", "BP", "BP", "WP"],
             ["BR", "BN", "BB", "BQ", "BK", "BB", "BN", "  "]]
     choise = "!"
     if board1 != board or board1 == "":
@@ -122,19 +122,12 @@ def f_check(opponent, me):
                     if check[0] == False:
                         possible_moves.append([i, j])
                         possible_moves.append(moving)
-                    printboard(False, board_copy)
                     board_copy = deepcopy(board)
-                    print(f"moving = {moving}")
-    print(possible_moves)
     return possible_moves
 
 def checking(op, y, x):
     check[0] = True
     check[1] = op
-    if check[2] == []:
-        check[2] = [y, x]
-    else:
-        check[3] = [y, x]
 
 def attack(opponent, me, board):
     global check
@@ -319,7 +312,23 @@ def moving(y, x, moves, p, w):
         board[y][x] = "  "
         match(p):
             case "P":
-                board[y1][x1] = "WP"
+                if y1 == 7:
+                    scelta = 0
+                    while scelta > 4 or scelta < 1:
+                        scelta = int(input("Scegli in che pezzo promuovere il Pedone.\n1.Regina\n2.Torre\n3.Alfiere\n4.Cavallo\n"))
+                        match(scelta):
+                            case 1:
+                                board[y1][x1] = "WQ"
+                            case 2:
+                                board[y1][x1] = "WR"
+                            case 3:
+                                board[y1][x1] = "WB"
+                            case 4:
+                                board[y1][x1] = "WN"
+                        if scelta > 4 or scelta < 1:
+                            print("La scelta eseguita non e' valida, riprova.")
+                else:
+                    board[y1][x1] = "WP"
             case "N":
                 board[y1][x1] = "WN"
             case "B":
@@ -337,6 +346,23 @@ def moving(y, x, moves, p, w):
         board[y][x] = "  "
         match(p):
             case "P":
+                if y1 == 0:
+                    scelta = 0
+                    while scelta > 4 or scelta < 1:
+                        scelta = int(input("Scegli in che pezzo promuovere il Pedone.\n1.Regina\n2.Torre\n3.Alfiere\n4.Cavallo"))
+                        match(scelta):
+                            case 1:
+                                board[y1][x1] = "BQ"
+                            case 2:
+                                board[y1][x1] = "BR"
+                            case 3:
+                                board[y1][x1] = "BB"
+                            case 4:
+                                board[y1][x1] = "BN"
+                        if scelta > 4 or scelta < 1:
+                            print("La scelta eseguita non e' valida, riprova.")
+                else:
+                    board[y1][x1] = "WP"
                 board[y1][x1] = "BP"
             case "N":
                 board[y1][x1] = "BN"
@@ -377,19 +403,6 @@ def pawn(y, x, moves, op, control, board):
         a = 0
         b = 1
         c = 7
-    if y == c:
-        printboard(me, board)
-        scelta = int(input("1.Regina\n2.Torre\n3.Alfiere\n4.Cavallo\n"))
-        match(scelta):
-            case 1:
-                board[x][y] = f"{me}Q"
-            case 2:
-                board[x][y] = f"{me}R"
-            case 3:
-                board[x][y] = f"{me}B"
-            case 4:
-                board[x][y] = f"{me}N"
-
     if not control:
         if board[y+(1*b)][x] == "  ":
             moves.append([y+(1*b),x])
@@ -407,10 +420,9 @@ def pawn(y, x, moves, op, control, board):
                     checking(op, y, x)
     elif control:
         if x != c and y != c:
-                moves.append([y+(1*b),x+(1*b)])
+            moves.append([y+(1*b),x+(1*b)])
         if y != c and x != a:
             moves.append([y+(1*b),x-(1*b)])
-        return moves       
 
 def knight(y, x, moves, op, control, board):
     if y < 5 and x < 6:
@@ -453,8 +465,6 @@ def knight(y, x, moves, op, control, board):
             moves.append([y-2,x-1])
             if board[y-2][x-1] == f"{op}K":
                 checking(op, y, x)
-    if control:
-        return moves
 
 def rook(y, x, moves, me, op, control, board):
     for i in range(1, 8):
@@ -509,8 +519,6 @@ def rook(y, x, moves, me, op, control, board):
                 break
             elif board[y][x-i] == "  ":
                 moves.append([y, x-i])
-    if control:
-        return moves
 
 def bishop(y, x, moves, me, op, control, board):
     for i in range(1, 8):
@@ -565,7 +573,5 @@ def bishop(y, x, moves, me, op, control, board):
                 break
             elif board[y-i][x-i] == "  ":
                 moves.append([y-i, x-i])
-    if control:
-        return moves
 
 multigiocatore()
