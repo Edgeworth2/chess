@@ -6,6 +6,10 @@ from save import *
 illegal_moves = []
 global check
 check = [False, ""]
+global white_k_moved
+white_k_moved = False
+global black_k_moved
+black_k_moved = False
 
 def multigiocatore():
     global board
@@ -16,8 +20,8 @@ def multigiocatore():
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
             ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-            ["BP", "BP", "BP", "BP", "BP", "BP", "BP", "WP"],
-            ["BR", "BN", "BB", "BQ", "BK", "BB", "BN", "  "]]
+            ["BP", "BP", "BP", "BP", "BP", "BP", "BP", "BP"],
+            ["BR", "BN", "BB", "BQ", "BK", "BB", "BN", "BR"]]
     choise = "!"
     if board1 != board or board1 == "":
         while choise != "y" and choise != "n" and choise != "Y" and choise != "N":
@@ -140,7 +144,7 @@ def attack(opponent, me, board):
             if board[i][j][0] == opponent:
                 match(board[i][j][1]):
                     case "P":
-                        pawn(i, j, enemy_moves, me, True, board)
+                        pawn(i, j, enemy_moves, opponent, True, board)
                     case "N":
                         knight(i, j, enemy_moves, me, True, board)
                     case "B":
@@ -279,6 +283,9 @@ def black(y, x, p):
     turn(True)
                
 def moving(y, x, moves, p, w):
+    global white_k_moved
+    global black_k_moved
+    global possible_moves
     global illegal_moves
     dowhile = True
     while dowhile == True:
@@ -297,36 +304,34 @@ def moving(y, x, moves, p, w):
                 time.sleep(2)
                 dowhile = True
                 continue
-    if([y1, x1] in illegal_moves):
+            else:
+                possible_moves = []
+                check[0] = False
+                break
+    if [y1, x1] in illegal_moves and board[y1][x1][1] == "K":
         print("Il Re non può muoversi in case controllate dall'avversario, riprova.")
         time.sleep(3)
         turn(w)
-    elif([y1, x1] not in moves):
+    elif [y1, x1] not in moves:
             print("Questa mossa non e' valida, riprova.")
             time.sleep(2)
             if w:
                 white(y, x, p)
             else:
                 black(y, x, p)
-    elif w == True:
+    elif w:
         board[y][x] = "  "
+        if check[0] != False or (check[0] == True and check[1] == "B"):
+            attack("B", "W", board)
+            if check == [True,"W"]:
+                print("Quella mossa e' illegale dato che lascia il tuo Re sotto scacco.")
+                time.sleep(1)
+                board[y][x] = f"W{p}"
+                turn(w)
         match(p):
             case "P":
                 if y1 == 7:
-                    scelta = 0
-                    while scelta > 4 or scelta < 1:
-                        scelta = int(input("Scegli in che pezzo promuovere il Pedone.\n1.Regina\n2.Torre\n3.Alfiere\n4.Cavallo\n"))
-                        match(scelta):
-                            case 1:
-                                board[y1][x1] = "WQ"
-                            case 2:
-                                board[y1][x1] = "WR"
-                            case 3:
-                                board[y1][x1] = "WB"
-                            case 4:
-                                board[y1][x1] = "WN"
-                        if scelta > 4 or scelta < 1:
-                            print("La scelta eseguita non e' valida, riprova.")
+                    promotion(w,y1,x1)
                 else:
                     board[y1][x1] = "WP"
             case "N":
@@ -338,32 +343,31 @@ def moving(y, x, moves, p, w):
             case "Q":
                 board[y1][x1] = "WQ"
             case "K":
-                board[y1][x1] = "WK"
+                if x1 == x+2:
+                    castle("B", "W", y1, x1, False)
+                elif x1 == x-2:
+                    castle("B", "W", y1, x1, True)
+                else:
+                    board[y1][x1] = "WK"
+                white_k_moved = True
         print("mossa eseguita.")
         time.sleep(1)
         printboard(True, board)
-    elif w == False:
+    else:
         board[y][x] = "  "
+        if check == [True,"B"]:
+            attack("W", "B", board)
+            if check == [True,"B"]:
+                print("Quella mossa e' illegale dato che lascia il tuo Re sotto scacco.")
+                time.sleep(2)
+                board[y1][x1] = f"B{p}"
+                turn(w)
         match(p):
             case "P":
                 if y1 == 0:
-                    scelta = 0
-                    while scelta > 4 or scelta < 1:
-                        scelta = int(input("Scegli in che pezzo promuovere il Pedone.\n1.Regina\n2.Torre\n3.Alfiere\n4.Cavallo"))
-                        match(scelta):
-                            case 1:
-                                board[y1][x1] = "BQ"
-                            case 2:
-                                board[y1][x1] = "BR"
-                            case 3:
-                                board[y1][x1] = "BB"
-                            case 4:
-                                board[y1][x1] = "BN"
-                        if scelta > 4 or scelta < 1:
-                            print("La scelta eseguita non e' valida, riprova.")
+                    promotion(w,y1,x1)
                 else:
-                    board[y1][x1] = "WP"
-                board[y1][x1] = "BP"
+                    board[y1][x1] = "BP"
             case "N":
                 board[y1][x1] = "BN"
             case "B":
@@ -373,11 +377,40 @@ def moving(y, x, moves, p, w):
             case "Q":
                 board[y1][x1] = "BQ"
             case "K":
-                board[y1][x1] = "BK"
+                if x1 == x+2:
+                    castle("W", "B", y1, x1, False)
+                elif x1 == x-2:
+                    castle("W", "B", y1, x1, True)
+                else:
+                    board[y1][x1] = "BK"
+                black_k_moved = True
         print("mossa eseguita.")
         time.sleep(1)
         printboard(False, board)
         
+def castle(op, me, y1, x1, long):
+    if me == "W":
+        w = True
+    else:
+        w = False
+    if ([y1,x1] in attack(f"{op}", f"{me}", board) or [y1,x1-1] in attack(f"{op}", f"{me}", board)) and long == False:
+        print("Questa mossa non e' eseguibile dato che almeno una casella tra il Re e la torre e' occupata dall'avversario.")
+        time.sleep(2)
+        board[y1][x1-2] = f"{me}K"
+        turn(w)
+    elif not long:
+        board[y1][x1] = f"{me}K"
+        board[y1][x1-1] = f"{me}R"
+        board[y1][x1+1] = "  "
+    if ([y1,x1] in attack(f"{op}", f"{me}", board) or [y1,x1-1] in attack(f"{op}", f"{me}", board) or [y1,x1+1] in attack(f"{op}", f"{me}", board)) and long == True:
+        print("Questa mossa non e' eseguibile dato che almeno una casella tra il Re e la torre e' occupata dall'avversario.")
+        time.sleep(2)
+        board[y1][x1+2] = f"{me}K"
+        turn(w)
+    elif long:
+        board[y1][x1] = f"{me}K"
+        board[y1][x1+1] = f"{me}R"
+        board[y1][x1-2] = "  "
 
 def king(y, x, moves, me, op, control, board):
     global illegal_moves
@@ -391,15 +424,23 @@ def king(y, x, moves, me, op, control, board):
             if y+i >= 0 and y+i < 8 and x+j >= 0 and x+j < 8:
                 if board[y+i][x+j][0] != f"{me}":
                     moves.append([y+i, x+j])
+    if me == "W" and white_k_moved == False:
+        if board[y][x+1] == "  " and board[y][x+2] == "  " and board[y][x+2] and board[y][x+3] == "WR" and check != [True, "W"]:
+            moves.append([y,x+2])
+        if board[y][x-1] == "  " and board[y][x-1] and board[y][x-2] == "  " and  board[y][x-3] == "  " and board[y][x-3] and board[y][x-4] == "WR" and check != [True, "W"]:
+            moves.append([y,x-2])
+    if me == "B" and black_k_moved == False:
+        if board[y][x+1] == "  " and board[y][x+2] == "  " and board[y][x+3] == "BR" and check != [True, "B"]:
+            moves.append([y,x+2])
+        if board[y][x-1] == "  " and board[y][x-2] == "  " and board[y][x-3] == "  " and board[y][x-4] == "BR" and check != [True, "B"]:
+            moves.append([y,x-2])
 
 def pawn(y, x, moves, op, control, board):
     if op == "W":
-        me = "B"
         a = 7
         b = -1
         c = 0
     elif op == "B":
-        me = "W"
         a = 0
         b = 1
         c = 7
@@ -424,28 +465,48 @@ def pawn(y, x, moves, op, control, board):
         if y != c and x != a:
             moves.append([y+(1*b),x-(1*b)])
 
+def promotion(w, y1, x1):
+    if w:
+        me = "W"
+    else:
+        me = "B"
+    scelta = 0
+    while scelta > 4 or scelta < 1:
+        scelta = int(input("Scegli in che pezzo promuovere il Pedone.\n1.Regina\n2.Torre\n3.Alfiere\n4.Cavallo\n"))
+        match(scelta):
+            case 1:
+                board[y1][x1] = f"{me}Q"
+            case 2:
+                board[y1][x1] = f"{me}R"
+            case 3:
+                board[y1][x1] = f"{me}B"
+            case 4:
+                board[y1][x1] = f"{me}N"
+        if scelta > 4 or scelta < 1:
+            print("La scelta eseguita non e' valida, riprova.")
+    
 def knight(y, x, moves, op, control, board):
-    if y < 5 and x < 6:
+    if y <= 5 and x < 6:
         if board[y+2][x+1] == "  " or board[y+2][x+1][0] == f"{op}":
             moves.append([y+2,x+1])
             if board[y+2][x+1] == f"{op}K":
                 checking(op, y, x)
-    if y < 5 and x > 0:
+    if y <= 5 and x > 0:
         if board[y+2][x-1] == "  " or board[y+2][x-1][0] == f"{op}":
             moves.append([y+2,x-1])
             if board[y+2][x-1] == f"{op}K":
                 checking(op, y, x)
-    if y < 6 and x < 5:
+    if y < 6 and x <= 5:
         if board[y+1][x+2] == "  " or board[y+1][x+2][0] == f"{op}":
             moves.append([y+1,x+2])
-            if board[y+2][x+1] == f"{op}K":
+            if board[y+1][x+2] == f"{op}K":
                     checking(op, y, x)
-    if y < 6 and x > 2:
+    if y < 6 and x >= 2:
         if board[y+1][x-2] == "  " or board[y+1][x-2][0] == f"{op}":
             moves.append([y+1,x-2])
             if board[y+1][x-2] == f"{op}K":
                 checking(op, y, x)
-    if y > 0 and x < 5:
+    if y > 0 and x <= 5:
         if board[y-1][x+2] == "  " or board[y-1][x+2][0] == f"{op}":
             moves.append([y-1,x+2])
             if board[y-1][x+2] == f"{op}K":
