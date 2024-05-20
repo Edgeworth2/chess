@@ -6,9 +6,7 @@ from save import *
 illegal_moves = []
 global check
 check = [False, ""]
-global white_k_moved
 white_k_moved = False
-global black_k_moved
 black_k_moved = False
 
 def multigiocatore():
@@ -187,6 +185,7 @@ def turn(w):
         possible_moves = f_check("B", "W")
         if possible_moves == []:
             print("Il Nero vince per scacco matto!")
+            time.sleep(5)
             exit()
         else:
             escapecheck = True
@@ -196,6 +195,7 @@ def turn(w):
         possible_moves = f_check("W", "B")
         if possible_moves == []:
             print("Il Bianco vince per scacco matto!")
+            time.sleep(5)
             exit()
         else:
             escapecheck = True
@@ -308,7 +308,7 @@ def moving(y, x, moves, p, w):
                 possible_moves = []
                 check[0] = False
                 break
-    if [y1, x1] in illegal_moves and board[y1][x1][1] == "K":
+    if [y1, x1] in illegal_moves and board[y][x][1] == "K":
         print("Il Re non può muoversi in case controllate dall'avversario, riprova.")
         time.sleep(3)
         turn(w)
@@ -389,6 +389,8 @@ def moving(y, x, moves, p, w):
         printboard(False, board)
         
 def castle(op, me, y1, x1, long):
+    global white_k_moved
+    global black_k_moved
     if me == "W":
         w = True
     else:
@@ -402,6 +404,10 @@ def castle(op, me, y1, x1, long):
         board[y1][x1] = f"{me}K"
         board[y1][x1-1] = f"{me}R"
         board[y1][x1+1] = "  "
+        if w:
+            white_k_moved = True
+        elif not w:
+            black_k_moved = True
     if ([y1,x1] in attack(f"{op}", f"{me}", board) or [y1,x1-1] in attack(f"{op}", f"{me}", board) or [y1,x1+1] in attack(f"{op}", f"{me}", board)) and long == True:
         print("Questa mossa non e' eseguibile dato che almeno una casella tra il Re e la torre e' occupata dall'avversario.")
         time.sleep(2)
@@ -411,6 +417,11 @@ def castle(op, me, y1, x1, long):
         board[y1][x1] = f"{me}K"
         board[y1][x1+1] = f"{me}R"
         board[y1][x1-2] = "  "
+        if w:
+            white_k_moved = True
+        elif not w:
+            black_k_moved = True
+    
 
 def king(y, x, moves, me, op, control, board):
     global illegal_moves
